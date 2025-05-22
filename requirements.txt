@@ -1,0 +1,5 @@
+streamlit
+feedparser
+# Para sumarização avançada, adicione:
+# transformers
+# torch
