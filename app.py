@@ -1,6 +1,7 @@
 import streamlit as st
-from news_collector import get_news_from_feeds, get_tech_feeds
+from news_collector import get_news_from_feeds, get_tech_feeds, clean_html
 from summarizer import summarize_text
+import html
 
 # CSS customizado inspirado no design do site pedrolazzaroni.com.br
 st.markdown('''
@@ -156,6 +157,10 @@ st.markdown(f'''
 cols = st.columns(2)
 for idx, article in enumerate(news):
     with cols[idx % 2]:
+        # Escapar HTML para evitar problemas de renderização
+        safe_title = html.escape(article["title"])
+        safe_summary = html.escape(article["summary"][:200])
+        
         card_html = f'''
         <div class="news-card">
             <span class="tech-badge">TECH</span>
@@ -164,19 +169,30 @@ for idx, article in enumerate(news):
         # Renderização de imagem
         image_url = article.get('image', None)
         if image_url:
-            card_html += f'<img src="{image_url}" class="news-img" alt="imagem da notícia">'
+            card_html += f'<img src="{image_url}" class="news-img" alt="imagem da notícia" onerror="this.style.display=\'none\'">'
         
         card_html += f'''
-            <div class="news-title">{article["title"]}</div>
-            <div class="news-summary">{article["summary"][:200]}...</div>
+            <div class="news-title">{safe_title}</div>
+            <div class="news-summary">{safe_summary}...</div>
             <div class="news-actions">
-                <a href="{article["link"]}" class="news-link" target="_blank">Ler Notícia</a>
+                <a href="{article["link"]}" class="news-link" target="_blank">📖 Ler Notícia</a>
             </div>
         </div>
         '''
         st.markdown(card_html, unsafe_allow_html=True)
         
-        # Botão de sumarização
-        if st.button("📝 Sumarizar", key=f"summ_{idx}"):
-            resumo = summarize_text(article['summary'])
-            st.info(f"📄 **Resumo:** {resumo}")
+        # Botão de sumarização melhorado
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            if st.button("📝 Resumir", key=f"summ_{idx}", help="Gerar resumo automático"):
+                with st.spinner("Gerando resumo..."):
+                    resumo = summarize_text(article['summary'])
+                    st.session_state[f"resumo_{idx}"] = resumo
+        
+        # Exibir resumo se existir
+        if f"resumo_{idx}" in st.session_state:
+            st.info(f"📄 **Resumo:** {st.session_state[f'resumo_{idx}']}")
+            with col2:
+                if st.button("❌ Limpar", key=f"clear_{idx}"):
+                    del st.session_state[f"resumo_{idx}"]
+                    st.experimental_rerun()

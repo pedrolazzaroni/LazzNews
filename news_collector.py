@@ -1,5 +1,20 @@
 import feedparser
 from datetime import datetime, date
+import re
+from html import unescape
+
+def clean_html(raw_html):
+    """Remove tags HTML e limpa o texto"""
+    if not raw_html:
+        return ''
+    # Remove tags HTML
+    cleanr = re.compile('<.*?>')
+    cleantext = re.sub(cleanr, '', raw_html)
+    # Decodifica entidades HTML
+    cleantext = unescape(cleantext)
+    # Remove quebras de linha excessivas e espaços
+    cleantext = re.sub(r'\s+', ' ', cleantext).strip()
+    return cleantext
 
 def get_news_from_feeds(feed_urls):
     articles = []
@@ -25,12 +40,15 @@ def get_news_from_feeds(feed_urls):
                 article_date = date(*entry.published_parsed[:3])
             elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
                 article_date = date(*entry.updated_parsed[:3])
-            
-            # Só adicionar se for notícia de hoje
+              # Só adicionar se for notícia de hoje
             if article_date == today:
+                # Limpar HTML do título e resumo
+                clean_title = clean_html(entry.get('title', 'Sem título'))
+                clean_summary = clean_html(entry.get('summary', 'Sem resumo'))
+                
                 articles.append({
-                    'title': entry.get('title', 'Sem título'),
-                    'summary': entry.get('summary', 'Sem resumo'),
+                    'title': clean_title,
+                    'summary': clean_summary,
                     'link': entry.get('link', '#'),
                     'published': entry.get('published', ''),
                     'image': image_url
