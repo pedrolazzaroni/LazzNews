@@ -3,7 +3,6 @@ from news_collector import get_news_from_feeds, get_tech_feeds, clean_html
 from summarizer import summarize_text
 import html
 
-# CSS customizado inspirado no design do site pedrolazzaroni.com.br
 st.markdown('''
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
