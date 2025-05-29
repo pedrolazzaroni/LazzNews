@@ -32,8 +32,18 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSources();
     updateCurrentYear();
 });
-refreshBtn.addEventListener('click', refreshNews);
-closeModal.addEventListener('click', closeSummaryModal);
+
+// Garantir que os event listeners sejam adicionados após o DOM estar carregado
+if (refreshBtn) {
+    refreshBtn.addEventListener('click', refreshNews);
+}
+if (sourcesBtn) {
+    sourcesBtn.addEventListener('click', toggleSources);
+}
+if (closeModal) {
+    closeModal.addEventListener('click', closeSummaryModal);
+}
+
 window.addEventListener('click', (e) => {
     if (e.target === summaryModal) {
         closeSummaryModal();
@@ -50,6 +60,8 @@ function updateCurrentYear() {
 
 // Função para alternar seção de fontes com animação melhorada
 function toggleSources() {
+    if (!sourcesSection) return;
+    
     const isVisible = sourcesSection.style.display !== 'none';
     
     if (isVisible) {
@@ -58,14 +70,20 @@ function toggleSources() {
         setTimeout(() => {
             sourcesSection.style.display = 'none';
         }, 300);
-        sourcesBtn.innerHTML = '<i class="fas fa-rss"></i>';
-        sourcesBtn.style.background = 'linear-gradient(135deg, rgba(255, 140, 0, 0.15), rgba(255, 165, 0, 0.1))';
+        
+        if (sourcesBtn) {
+            sourcesBtn.innerHTML = '<span class="btn-icon"><i class="fas fa-rss"></i></span>';
+            sourcesBtn.style.background = 'linear-gradient(135deg, rgba(255, 140, 0, 0.15), rgba(255, 165, 0, 0.1))';
+        }
     } else {
         // Mostrar com animação
         sourcesSection.style.display = 'block';
         sourcesSection.style.animation = 'slideDown 0.3s ease';
-        sourcesBtn.innerHTML = '<i class="fas fa-times"></i>';
-        sourcesBtn.style.background = 'linear-gradient(135deg, rgba(255, 140, 0, 0.25), rgba(255, 165, 0, 0.2))';
+        
+        if (sourcesBtn) {
+            sourcesBtn.innerHTML = '<span class="btn-icon"><i class="fas fa-times"></i></span>';
+            sourcesBtn.style.background = 'linear-gradient(135deg, rgba(255, 140, 0, 0.25), rgba(255, 165, 0, 0.2))';
+        }
         
         if (sourcesData.length === 0) {
             loadSources();
@@ -117,9 +135,10 @@ async function loadNews() {
 }
 
 async function refreshNews() {
+    if (!refreshBtn) return;
+    
     refreshBtn.disabled = true;
     refreshBtn.classList.add('loading');
-    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
     
     try {
         const response = await fetch('/api/refresh');
@@ -138,7 +157,6 @@ async function refreshNews() {
     } finally {
         refreshBtn.disabled = false;
         refreshBtn.classList.remove('loading');
-        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
     }
 }
 
@@ -277,18 +295,20 @@ function updateStats() {
     }
     
     // Calcular paginação
-    totalPages = Math.ceil(newsData.length / itemsPerPage);
-    totalPagesEl.textContent = totalPages;
-    currentPageEl.textContent = currentPage;
-    
-    // Mostrar/ocultar paginação
-    if (totalPages > 1) {
-        pagination.style.display = 'flex';
-    } else {
-        pagination.style.display = 'none';
+    if (totalPagesEl && currentPageEl && pagination) {
+        totalPages = Math.ceil(newsData.length / itemsPerPage);
+        totalPagesEl.textContent = totalPages;
+        currentPageEl.textContent = currentPage;
+        
+        // Mostrar/ocultar paginação
+        if (totalPages > 1) {
+            pagination.style.display = 'flex';
+        } else {
+            pagination.style.display = 'none';
+        }
+        
+        updatePaginationButtons();
     }
-    
-    updatePaginationButtons();
 }
 
 // Função para animar a atualização do contador
@@ -378,19 +398,15 @@ function changePage(direction) {
 }
 
 function updatePaginationButtons() {
-    prevPageBtn.disabled = currentPage === 1;
-    nextPageBtn.disabled = currentPage === totalPages;
-}
-
-function getPaginatedNews() {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return newsData.slice(startIndex, endIndex);
+    if (prevPageBtn && nextPageBtn) {
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = currentPage === totalPages;
+    }
 }
 
 function showLoading(show) {
-    loading.classList.toggle('show', show);
-    newsGrid.style.display = show ? 'none' : 'grid';
+    if (loading) loading.classList.toggle('show', show);
+    if (newsGrid) newsGrid.style.display = show ? 'none' : 'grid';
 }
 
 function showError(message) {
@@ -422,6 +438,13 @@ function formatDate(date) {
     if (diff < 3600) return `${Math.floor(diff / 60)}min atrás`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h atrás`;
     return date.toLocaleDateString('pt-BR');
+}
+
+// Função para paginar notícias
+function getPaginatedNews() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return newsData.slice(startIndex, endIndex);
 }
 
 // Auto-refresh a cada 30 minutos
