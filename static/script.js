@@ -2,6 +2,9 @@
 let newsData = [];
 let lastUpdate = 0;
 let sourcesData = [];
+let currentPage = 1;
+const itemsPerPage = 20;
+let totalPages = 1;
 
 // Elementos DOM
 const newsGrid = document.getElementById('newsGrid');
@@ -15,11 +18,17 @@ const summaryContent = document.getElementById('summaryContent');
 const closeModal = document.querySelector('.close');
 const sourcesSection = document.getElementById('sourcesSection');
 const sourcesList = document.getElementById('sourcesList');
+const pagination = document.getElementById('pagination');
+const currentPageEl = document.getElementById('currentPage');
+const totalPagesEl = document.getElementById('totalPages');
+const prevPageBtn = document.getElementById('prevPage');
+const nextPageBtn = document.getElementById('nextPage');
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     loadNews();
     loadSources();
+    updateCurrentYear();
 });
 refreshBtn.addEventListener('click', refreshNews);
 closeModal.addEventListener('click', closeSummaryModal);
@@ -28,6 +37,14 @@ window.addEventListener('click', (e) => {
         closeSummaryModal();
     }
 });
+
+// Atualizar ano no footer
+function updateCurrentYear() {
+    const currentYearEl = document.getElementById('currentYear');
+    if (currentYearEl) {
+        currentYearEl.textContent = new Date().getFullYear();
+    }
+}
 
 // Função para alternar seção de fontes
 function toggleSources() {
@@ -87,13 +104,14 @@ async function loadNews() {
 
 async function refreshNews() {
     refreshBtn.disabled = true;
-    refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Atualizando...';
+    refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
     
     try {
         const response = await fetch('/api/refresh');
         const data = await response.json();
         newsData = data.news;
         lastUpdate = data.last_update;
+        currentPage = 1; // Reset para primeira página
         updateStats();
         renderNews();
         
@@ -104,12 +122,14 @@ async function refreshNews() {
         showNotification('Erro ao atualizar notícias. Tente novamente.', 'error');
     } finally {
         refreshBtn.disabled = false;
-        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar Notícias';
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
     }
 }
 
 function renderNews() {
-    if (newsData.length === 0) {
+    const paginatedNews = getPaginatedNews();
+
+    if (paginatedNews.length === 0) {
         newsGrid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
                 <i class="fas fa-newspaper" style="font-size: 4rem; color: #ff8c00; margin-bottom: 1rem;"></i>
@@ -120,7 +140,7 @@ function renderNews() {
         return;
     }
 
-    newsGrid.innerHTML = newsData.map((article, index) => `
+    newsGrid.innerHTML = paginatedNews.map((article, index) => `
         <article class="news-card" data-index="${index}">
             ${article.image ? `<img src="${article.image}" alt="Imagem da notícia" class="news-image" onerror="this.style.display='none'">` : ''}
             <div class="news-content">
@@ -228,10 +248,46 @@ function closeSummaryModal() {
 
 function updateStats() {
     newsCount.textContent = newsData.length;
-    if (lastUpdate) {
-        const date = new Date(lastUpdate * 1000);
-        lastUpdateEl.textContent = formatDate(date);
+    
+    // Calcular paginação
+    totalPages = Math.ceil(newsData.length / itemsPerPage);
+    totalPagesEl.textContent = totalPages;
+    currentPageEl.textContent = currentPage;
+    
+    // Mostrar/ocultar paginação
+    if (totalPages > 1) {
+        pagination.style.display = 'flex';
+    } else {
+        pagination.style.display = 'none';
     }
+    
+    updatePaginationButtons();
+}
+
+function changePage(direction) {
+    const newPage = currentPage + direction;
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        currentPageEl.textContent = currentPage;
+        renderNews();
+        updatePaginationButtons();
+        
+        // Scroll suave para o topo das notícias
+        document.getElementById('noticias').scrollIntoView({ 
+            behavior: 'smooth' 
+        });
+    }
+}
+
+function updatePaginationButtons() {
+    prevPageBtn.disabled = currentPage === 1;
+    nextPageBtn.disabled = currentPage === totalPages;
+}
+
+function getPaginatedNews() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return newsData.slice(startIndex, endIndex);
 }
 
 function showLoading(show) {

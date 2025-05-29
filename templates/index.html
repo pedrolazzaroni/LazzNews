@@ -8,40 +8,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <!-- Header Navigation -->
-    <header class="header-nav">
-        <div class="nav-left">
-            <a href="#" class="nav-item active">🏠 Início</a>
-            <a href="#noticias" class="nav-item">📰 Notícias</a>
-            <a href="#fontes" class="nav-item" onclick="toggleSources()">📡 Fontes</a>
-        </div>
-        <div class="nav-right">
-            <a href="https://pedrolazzaroni.com.br" class="nav-item" target="_blank">🌐 Meu Site</a>
+<body>    <!-- Fixed Header -->
+    <header class="fixed-header">
+        <div class="header-container">
+            <div class="header-logo">
+                <h1>LazzNews</h1>
+            </div>
+            <div class="header-actions">
+                <button id="refreshBtn" class="header-btn">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button id="sourcesBtn" class="header-btn" onclick="toggleSources()">
+                    <i class="fas fa-rss"></i>
+                </button>
+            </div>
         </div>
     </header>
 
     <div class="container">
-        <!-- Main Header -->
-        <header class="main-header">
-            <div class="header-content">
-                <h1 class="main-title">
-                    <i class="fas fa-rocket"></i>
-                    LazzNews
-                </h1>
-                <p class="subtitle">Agregador de Notícias de Tecnologia Brasileira</p>
-                <div class="header-actions">
-                    <button id="refreshBtn" class="refresh-btn">
-                        <i class="fas fa-sync-alt"></i>
-                        Atualizar Notícias
-                    </button>
-                    <button id="sourcesBtn" class="sources-btn" onclick="toggleSources()">
-                        <i class="fas fa-rss"></i>
-                        Ver Fontes
-                    </button>
+        <!-- App Description -->
+        <section class="app-description">
+            <div class="description-content">
+                <h2>🇧🇷 Tecnologia Brasileira em Tempo Real</h2>
+                <p>O LazzNews é seu agregador inteligente de notícias de tecnologia, focado exclusivamente em fontes brasileiras. 
+                Acompanhe as últimas tendências, lançamentos e inovações do cenário tech nacional, com notícias atualizadas 
+                diariamente dos principais portais especializados do Brasil.</p>
+                <div class="features">
+                    <span class="feature-tag">📰 Notícias do Dia</span>
+                    <span class="feature-tag">🤖 Resumos IA</span>
+                    <span class="feature-tag">🔄 Auto-Refresh</span>
+                    <span class="feature-tag">📱 Responsivo</span>
                 </div>
             </div>
-        </header>
+        </section>
 
         <!-- Sources Section -->
         <div id="sourcesSection" class="sources-section" style="display: none;">
@@ -77,64 +76,61 @@
         <div id="loading" class="loading">
             <div class="spinner"></div>
             <p>Carregando notícias do dia...</p>
-        </div>
-
-        <!-- News Section -->
+        </div>        <!-- News Section with Pagination -->
         <section id="noticias">
+            <div class="news-header">
+                <h3>📰 Notícias de Hoje</h3>
+                <div class="news-stats">
+                    <span id="newsCount">0</span> notícias encontradas
+                </div>
+            </div>
             <div id="newsGrid" class="news-grid">
                 <!-- Notícias serão carregadas aqui via JavaScript -->
             </div>
+            
+            <!-- Pagination -->
+            <div id="pagination" class="pagination" style="display: none;">
+                <button id="prevPage" class="pagination-btn" onclick="changePage(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                    Anterior
+                </button>
+                <div class="pagination-info">
+                    Página <span id="currentPage">1</span> de <span id="totalPages">1</span>
+                </div>
+                <button id="nextPage" class="pagination-btn" onclick="changePage(1)">
+                    Próxima
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
         </section>
-    </div>
-
-    <!-- Footer -->
+    </div>    <!-- Footer -->
     <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-main">
-                <div class="footer-brand">
-                    <h3>🚀 LazzNews</h3>
-                    <p>Agregador de notícias de tecnologia brasileira, desenvolvido para manter você atualizado com as últimas tendências tech do Brasil.</p>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="logo-icon">🚀</div>
+                    <span>Pedro Lazzaroni</span>
                 </div>
-                <div class="footer-links-section">
-                    <h4>Links Úteis</h4>
-                    <div class="footer-links">
-                        <a href="https://pedrolazzaroni.com.br">🏠 Portfólio</a>
-                        <a href="https://pedrolazzaroni.com.br/about">👨‍💻 Sobre</a>
-                        <a href="https://pedrolazzaroni.com.br/projects">💼 Projetos</a>
-                        <a href="https://pedrolazzaroni.com.br/contact">📞 Contato</a>
-                    </div>
-                </div>
-                <div class="footer-tech">
-                    <h4>Tecnologias</h4>
-                    <div class="tech-stack">
-                        <span class="tech-item">Python</span>
-                        <span class="tech-item">Flask</span>
-                        <span class="tech-item">RSS</span>
-                        <span class="tech-item">JavaScript</span>
-                    </div>
+                
+                <div class="footer-social">
+                    <a href="https://linkedin.com/in/pedrolazzaroni" class="social-link" target="_blank" title="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="https://github.com/pedrolazzaroni" class="social-link" target="_blank" title="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://www.instagram.com/pedro_lazzaroni" class="social-link" target="_blank" title="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="mailto:contato@pedrolazzaroni.com.br" class="social-link" title="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
                 </div>
             </div>
-            <div class="footer-social">
-                <a href="https://github.com/pedrolazzaroni" target="_blank" class="social-icon" title="GitHub">
-                    <i class="fab fa-github"></i>
-                </a>
-                <a href="https://linkedin.com/in/pedrolazzaroni" target="_blank" class="social-icon" title="LinkedIn">
-                    <i class="fab fa-linkedin"></i>
-                </a>
-                <a href="https://instagram.com/pedrolazzaroni" target="_blank" class="social-icon" title="Instagram">
-                    <i class="fab fa-instagram"></i>
-                </a>
-                <a href="mailto:contato@pedrolazzaroni.com.br" class="social-icon" title="Email">
-                    <i class="fas fa-envelope"></i>
-                </a>
-            </div>
+            
             <div class="footer-bottom">
-                <div class="footer-text">
-                    Desenvolvido com ❤️ por <strong>Pedro Lazzaroni</strong>
-                </div>
-                <div class="footer-copyright">
-                    © 2024 Pedro Lazzaroni. Todos os direitos reservados.
-                </div>
+                <p>&copy; <span id="currentYear">2024</span> Pedro Lazzaroni. Todos os direitos reservados.</p>
+                <small>LazzNews - Desenvolvido com ❤️ e tecnologia brasileira</small>
             </div>
         </div>
     </footer>
