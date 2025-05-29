@@ -59,20 +59,9 @@ def api_refresh():
 @app.route('/api/sources')
 def api_sources():
     """API para obter lista de fontes"""
-    sources = [
-        {"name": "Olhar Digital", "url": "https://olhardigital.com.br"},
-        {"name": "Tecnoblog", "url": "https://tecnoblog.net"},
-        {"name": "TechTudo", "url": "https://www.techtudo.com.br"},
-        {"name": "Canaltech", "url": "https://canaltech.com.br"},
-        {"name": "Hardware.com.br", "url": "https://www.hardware.com.br"},
-        {"name": "Adrenaline", "url": "https://www.adrenaline.com.br"},
-        {"name": "ShowMeTech", "url": "https://www.showmetech.com.br"},
-        {"name": "TudoCelular", "url": "https://www.tudocelular.com"},
-        {"name": "MeioBit", "url": "https://meiobit.com"},
-        {"name": "MobileTime", "url": "https://www.mobiletime.com.br"},
-        {"name": "TecMundo", "url": "https://www.tecmundo.com.br"},
-        {"name": "UOL Tilt", "url": "https://www.uol.com.br/tilt"}
-    ]
+    # Usar a mesma lista de feeds para manter consistência
+    feeds = get_tech_feeds()
+    sources = [{"name": feed["name"], "url": feed["url"].replace("/feed/", "").replace("/rss/", "").replace("/rss", "")} for feed in feeds]
     return jsonify({'sources': sources})
 
 @app.route('/api/summarize')

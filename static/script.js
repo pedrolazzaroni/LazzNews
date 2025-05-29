@@ -5,6 +5,7 @@ let sourcesData = [];
 let currentPage = 1;
 const itemsPerPage = 20;
 let totalPages = 1;
+let sourcesVisible = false;
 
 // Elementos DOM
 const newsGrid = document.getElementById('newsGrid');
@@ -31,18 +32,18 @@ document.addEventListener('DOMContentLoaded', () => {
     loadNews();
     loadSources();
     updateCurrentYear();
+    
+    // Adicionar event listeners após DOM carregado
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshNews);
+    }
+    if (sourcesBtn) {
+        sourcesBtn.addEventListener('click', toggleSources);
+    }
+    if (closeModal) {
+        closeModal.addEventListener('click', closeSummaryModal);
+    }
 });
-
-// Garantir que os event listeners sejam adicionados após o DOM estar carregado
-if (refreshBtn) {
-    refreshBtn.addEventListener('click', refreshNews);
-}
-if (sourcesBtn) {
-    sourcesBtn.addEventListener('click', toggleSources);
-}
-if (closeModal) {
-    closeModal.addEventListener('click', closeSummaryModal);
-}
 
 window.addEventListener('click', (e) => {
     if (e.target === summaryModal) {
@@ -62,27 +63,35 @@ function updateCurrentYear() {
 function toggleSources() {
     if (!sourcesSection) return;
     
-    const isVisible = sourcesSection.style.display !== 'none';
+    // Prevenir cliques múltiplos
+    if (sourcesBtn) sourcesBtn.disabled = true;
     
-    if (isVisible) {
+    if (sourcesVisible) {
         // Esconder com animação
-        sourcesSection.style.animation = 'slideUp 0.3s ease';
+        sourcesSection.style.animation = 'slideUp 0.3s ease forwards';
         setTimeout(() => {
             sourcesSection.style.display = 'none';
+            sourcesSection.style.animation = '';
+            sourcesVisible = false;
+            if (sourcesBtn) sourcesBtn.disabled = false;
         }, 300);
         
         if (sourcesBtn) {
             sourcesBtn.innerHTML = '<span class="btn-icon"><i class="fas fa-rss"></i></span>';
             sourcesBtn.style.background = 'linear-gradient(135deg, rgba(255, 140, 0, 0.15), rgba(255, 165, 0, 0.1))';
+            sourcesBtn.style.borderColor = 'rgba(255, 140, 0, 0.4)';
         }
     } else {
         // Mostrar com animação
         sourcesSection.style.display = 'block';
-        sourcesSection.style.animation = 'slideDown 0.3s ease';
+        sourcesSection.style.animation = 'slideDown 0.3s ease forwards';
+        sourcesVisible = true;
         
         if (sourcesBtn) {
             sourcesBtn.innerHTML = '<span class="btn-icon"><i class="fas fa-times"></i></span>';
             sourcesBtn.style.background = 'linear-gradient(135deg, rgba(255, 140, 0, 0.25), rgba(255, 165, 0, 0.2))';
+            sourcesBtn.style.borderColor = 'rgba(255, 140, 0, 0.7)';
+            sourcesBtn.disabled = false;
         }
         
         if (sourcesData.length === 0) {
@@ -137,6 +146,9 @@ async function loadNews() {
 async function refreshNews() {
     if (!refreshBtn) return;
     
+    // Prevenir múltiplos cliques
+    if (refreshBtn.disabled) return;
+    
     refreshBtn.disabled = true;
     refreshBtn.classList.add('loading');
     
@@ -155,8 +167,11 @@ async function refreshNews() {
         console.error('Erro ao atualizar notícias:', error);
         showNotification('Erro ao atualizar notícias. Tente novamente.', 'error');
     } finally {
-        refreshBtn.disabled = false;
-        refreshBtn.classList.remove('loading');
+        // Pequeno delay para que o usuário veja o efeito
+        setTimeout(() => {
+            refreshBtn.disabled = false;
+            refreshBtn.classList.remove('loading');
+        }, 500);
     }
 }
 
@@ -172,13 +187,11 @@ function renderNews() {
             </div>
         `;
         return;
-    }
-
-    newsGrid.innerHTML = paginatedNews.map((article, index) => `
+    }    newsGrid.innerHTML = paginatedNews.map((article, index) => `
         <article class="news-card" data-index="${index}">
             ${article.image ? `<img src="${article.image}" alt="Imagem da notícia" class="news-image" onerror="this.style.display='none'">` : ''}
             <div class="news-content">
-                <span class="tech-badge">TECH BRASIL</span>
+                <span class="source-badge">${escapeHtml(article.source || 'Fonte Desconhecida')}</span>
                 <h3 class="news-title">${escapeHtml(article.title)}</h3>
                 <p class="news-summary">${escapeHtml(truncateText(article.summary, 150))}</p>
                 <div class="news-meta">

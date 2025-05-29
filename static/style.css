@@ -141,46 +141,54 @@ body {
 
 /* Efeito especial para botão loading */
 .header-btn.loading {
-    background: linear-gradient(135deg, rgba(255, 140, 0, 0.3), rgba(255, 165, 0, 0.25));
-    border-color: rgba(255, 140, 0, 0.8);
-    animation: loadingPulse 2s ease-in-out infinite;
-    box-shadow: 0 0 20px rgba(255, 140, 0, 0.4);
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.4), rgba(255, 165, 0, 0.3));
+    border-color: rgba(255, 140, 0, 0.9);
+    animation: loadingPulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 25px rgba(255, 140, 0, 0.6);
+    pointer-events: none;
 }
 
 .header-btn.loading::after {
     content: '';
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, #ff8c00, #ffa500, #ff8c00, #ffa500);
-    border-radius: 16px;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, #ff8c00, #ffa500, #ffb347, #ff8c00);
+    background-size: 400% 400%;
+    border-radius: 18px;
     z-index: 0;
-    animation: borderRotate 3s linear infinite;
+    animation: borderGlow 2s ease-in-out infinite;
 }
 
 @keyframes loadingPulse {
     0%, 100% { 
         transform: scale(1);
-        box-shadow: 0 0 20px rgba(255, 140, 0, 0.4);
+        box-shadow: 0 0 25px rgba(255, 140, 0, 0.6);
     }
     50% { 
-        transform: scale(1.05);
-        box-shadow: 0 0 30px rgba(255, 140, 0, 0.6);
+        transform: scale(1.08);
+        box-shadow: 0 0 35px rgba(255, 140, 0, 0.8);
     }
 }
 
-@keyframes borderRotate {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+@keyframes borderGlow {
+    0%, 100% { 
+        background-position: 0% 50%;
+        box-shadow: 0 0 15px rgba(255, 140, 0, 0.5);
+    }
+    50% { 
+        background-position: 100% 50%;
+        box-shadow: 0 0 25px rgba(255, 140, 0, 0.8);
+    }
 }
 
 .header-btn.loading .fa-sync-alt {
-    animation: smoothSpin 2s linear infinite;
+    animation: smoothSpin 1.5s linear infinite;
     color: #ffffff;
-    text-shadow: 0 0 10px rgba(255, 140, 0, 0.8);
+    text-shadow: 0 0 15px rgba(255, 140, 0, 1);
+    transform-origin: center;
 }
 
 @keyframes smoothSpin {
@@ -502,7 +510,7 @@ body {
     padding: 1.5rem;
 }
 
-.tech-badge {
+.source-badge {
     background: linear-gradient(45deg, #ff8c00, #ffa500);
     color: white;
     padding: 0.3rem 0.8rem;
@@ -511,6 +519,15 @@ body {
     font-weight: 500;
     margin-bottom: 1rem;
     display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.source-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.4);
 }
 
 .news-title {
@@ -1079,7 +1096,7 @@ body {
     from {
         opacity: 1;
         transform: translateY(0);
-        max-height: 500px;
+        max-height: 1000px;
     }
     to {
         opacity: 0;
@@ -1097,7 +1114,7 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
-        max-height: 500px;
+        max-height: 1000px;
     }
 }
 
@@ -1109,6 +1126,11 @@ body {
 .counter-status span,
 .stat-item span {
     transition: opacity 0.3s ease;
+}
+
+/* Estilo para seção de fontes */
+.sources-section {
+    overflow: hidden;
 }
 
 /* Responsive */
