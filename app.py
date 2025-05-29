@@ -1,198 +1,89 @@
-import streamlit as st
-from news_collector import get_news_from_feeds, get_tech_feeds, clean_html
+from flask import Flask, render_template, jsonify
+from news_collector import get_news_from_feeds, get_tech_feeds
 from summarizer import summarize_text
-import html
+import threading
+import time
 
+app = Flask(__name__)
 
-st.markdown('''
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-      body, .stApp {
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        color: #ffffff;
-    }
-    .main-header {
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        text-align: center;
-        box-shadow: 0 8px 32px rgba(255, 140, 0, 0.2);
-        border: 1px solid rgba(255, 140, 0, 0.3);
-    }
-    .main-title {
-        color: #ffffff;
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        background: linear-gradient(45deg, #ff8c00, #ffa500);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    .subtitle {
-        color: #7f8c8d;
-        font-size: 1.2rem;
-        font-weight: 400;
-    }
-    .news-card {
-        background: rgba(255,255,255,0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .news-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.5);
-    }
-    .news-img {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        border-radius: 12px;
-        margin-bottom: 1rem;
-    }
-    .news-title {
-        font-size: 1.4rem;
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.8rem;
-        line-height: 1.3;
-    }
-    .news-summary {
-        color: #5a6c7d;
-        font-size: 1rem;
-        margin-bottom: 1rem;
-        line-height: 1.5;
-    }
-    .news-actions {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }    .news-link {
-        background: linear-gradient(45deg, #ff8c00, #ffa500);
-        color: white;
-        padding: 0.6rem 1.2rem;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        display: inline-block;
-    }
-    .news-link:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
-        color: white;
-        text-decoration: none;
-    }
-    .tech-badge {
-        background: linear-gradient(45deg, #ff8c00, #ffa500);
-        color: white;
-        padding: 0.3rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        margin-bottom: 1rem;
-        display: inline-block;
-    }
-    .stats-container {
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        padding: 1rem;
-        margin-bottom: 2rem;
-        text-align: center;
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    .stSidebar > div:first-child {
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(10px);
-    }
-    </style>
-''', unsafe_allow_html=True)
+# Cache global de notícias
+news_cache = []
+last_update = 0
 
-st.markdown('''
-    <div class="main-header">
-        <div class="main-title">🚀 LazzNews</div>
-        <div class="subtitle">Agregador de Notícias de Tecnologia</div>
-    </div>
-''', unsafe_allow_html=True)
+def update_news():
+    """Atualiza o cache de notícias em background"""
+    global news_cache, last_update
+    feeds = get_tech_feeds()
+    news_cache = get_news_from_feeds(feeds)
+    last_update = time.time()
 
-# Usar feeds de tecnologia por padrão
-DEFAULT_TECH_FEEDS = get_tech_feeds()
+def get_cached_news():
+    """Retorna notícias do cache, atualizando se necessário"""
+    global news_cache, last_update
+    # Atualiza se não há cache ou se passou 30 minutos
+    if not news_cache or (time.time() - last_update) > 1800:
+        threading.Thread(target=update_news, daemon=True).start()
+        if not news_cache:  # Se ainda não há cache, busca sincronamente
+            update_news()
+    return news_cache
 
-st.sidebar.header("🔧 Configurações")
-use_default = st.sidebar.checkbox("Usar feeds de tecnologia pré-configurados", value=True)
+@app.route('/')
+def index():
+    """Página principal"""
+    return render_template('index.html')
 
-if use_default:
-    feeds = DEFAULT_TECH_FEEDS
-    st.sidebar.success(f"Usando {len(feeds)} feeds de tecnologia")
-else:
-    feeds = st.sidebar.text_area(
-        "Cole os links dos feeds RSS (um por linha):",
-        value="\n".join(DEFAULT_TECH_FEEDS),
-        height=120
-    ).splitlines()
+@app.route('/api/news')
+def api_news():
+    """API para buscar notícias"""
+    news = get_cached_news()
+    return jsonify({
+        'news': news,
+        'count': len(news),
+        'last_update': last_update
+    })
 
-if st.sidebar.button("🔄 Atualizar Notícias", type="primary"):
-    with st.spinner("Buscando notícias..."):
-        st.session_state["news"] = get_news_from_feeds(feeds)
+@app.route('/api/refresh')
+def api_refresh():
+    """API para forçar atualização das notícias"""
+    global news_cache, last_update
+    feeds = get_tech_feeds()
+    news_cache = get_news_from_feeds(feeds)
+    last_update = time.time()
+    return jsonify({
+        'success': True,
+        'news': news_cache,
+        'count': len(news_cache),
+        'last_update': last_update
+    })
 
-news = st.session_state.get("news", get_news_from_feeds(feeds))
+@app.route('/api/sources')
+def api_sources():
+    """API para obter lista de fontes"""
+    sources = [
+        {"name": "Olhar Digital", "url": "https://olhardigital.com.br"},
+        {"name": "Tecnoblog", "url": "https://tecnoblog.net"},
+        {"name": "TechTudo", "url": "https://www.techtudo.com.br"},
+        {"name": "Canaltech", "url": "https://canaltech.com.br"},
+        {"name": "Hardware.com.br", "url": "https://www.hardware.com.br"},
+        {"name": "Adrenaline", "url": "https://www.adrenaline.com.br"},
+        {"name": "ShowMeTech", "url": "https://www.showmetech.com.br"},
+        {"name": "TudoCelular", "url": "https://www.tudocelular.com"},
+        {"name": "MeioBit", "url": "https://meiobit.com"},
+        {"name": "MobileTime", "url": "https://www.mobiletime.com.br"},
+        {"name": "TecMundo", "url": "https://www.tecmundo.com.br"},
+        {"name": "UOL Tilt", "url": "https://www.uol.com.br/tilt"}
+    ]
+    return jsonify({'sources': sources})
 
-st.markdown(f'''
-    <div class="stats-container">
-        <h3>📊 {len(news)} notícias de tecnologia encontradas</h3>
-    </div>
-''', unsafe_allow_html=True)
+@app.route('/api/summarize')
+def api_summarize():
+    """API para sumarizar texto"""
+    from flask import request
+    text = request.args.get('text', '')
+    summary = summarize_text(text)
+    return jsonify({'summary': summary})
 
-# Grid de notícias
-cols = st.columns(2)
-for idx, article in enumerate(news):
-    with cols[idx % 2]:
-        # Escapar HTML para evitar problemas de renderização
-        safe_title = html.escape(article["title"])
-        safe_summary = html.escape(article["summary"][:200])
-        
-        card_html = f'''
-        <div class="news-card">
-            <span class="tech-badge">TECH</span>
-        '''
-        
-        # Renderização de imagem
-        image_url = article.get('image', None)
-        if image_url:
-            card_html += f'<img src="{image_url}" class="news-img" alt="imagem da notícia" onerror="this.style.display=\'none\'">'
-        
-        card_html += f'''
-            <div class="news-title">{safe_title}</div>
-            <div class="news-summary">{safe_summary}...</div>
-            <div class="news-actions">
-                <a href="{article["link"]}" class="news-link" target="_blank">📖 Ler Notícia</a>
-            </div>
-        </div>
-        '''
-        st.markdown(card_html, unsafe_allow_html=True)
-        
-        # Botão de sumarização melhorado
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            if st.button("📝 Resumir", key=f"summ_{idx}", help="Gerar resumo automático"):
-                with st.spinner("Gerando resumo..."):
-                    resumo = summarize_text(article['summary'])
-                    st.session_state[f"resumo_{idx}"] = resumo
-        
-        # Exibir resumo se existir
-        if f"resumo_{idx}" in st.session_state:
-            st.info(f"📄 **Resumo:** {st.session_state[f'resumo_{idx}']}")
-            with col2:
-                if st.button("❌ Limpar", key=f"clear_{idx}"):
-                    del st.session_state[f"resumo_{idx}"]
-                    st.experimental_rerun()
+if __name__ == '__main__':
+    # Carrega notícias na inicialização
+    update_news()
+    app.run(debug=True, host='0.0.0.0', port=5000)

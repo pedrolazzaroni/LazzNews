@@ -9,28 +9,57 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <!-- Header Navigation -->
+    <header class="header-nav">
+        <div class="nav-left">
+            <a href="#" class="nav-item active">🏠 Início</a>
+            <a href="#noticias" class="nav-item">📰 Notícias</a>
+            <a href="#fontes" class="nav-item" onclick="toggleSources()">📡 Fontes</a>
+        </div>
+        <div class="nav-right">
+            <a href="https://pedrolazzaroni.com.br" class="nav-item" target="_blank">🌐 Meu Site</a>
+        </div>
+    </header>
+
     <div class="container">
-        <!-- Header -->
+        <!-- Main Header -->
         <header class="main-header">
             <div class="header-content">
                 <h1 class="main-title">
                     <i class="fas fa-rocket"></i>
                     LazzNews
                 </h1>
-                <p class="subtitle">Agregador de Notícias de Tecnologia</p>
-                <button id="refreshBtn" class="refresh-btn">
-                    <i class="fas fa-sync-alt"></i>
-                    Atualizar Notícias
-                </button>
+                <p class="subtitle">Agregador de Notícias de Tecnologia Brasileira</p>
+                <div class="header-actions">
+                    <button id="refreshBtn" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i>
+                        Atualizar Notícias
+                    </button>
+                    <button id="sourcesBtn" class="sources-btn" onclick="toggleSources()">
+                        <i class="fas fa-rss"></i>
+                        Ver Fontes
+                    </button>
+                </div>
             </div>
         </header>
+
+        <!-- Sources Section -->
+        <div id="sourcesSection" class="sources-section" style="display: none;">
+            <div class="sources-header">
+                <h2><i class="fas fa-rss"></i> Fontes de Notícias</h2>
+                <p>Sites brasileiros de tecnologia utilizados pelo LazzNews</p>
+            </div>
+            <div id="sourcesList" class="sources-grid">
+                <!-- Fontes serão carregadas via JavaScript -->
+            </div>
+        </div>
 
         <!-- Stats -->
         <div class="stats-container">
             <div class="stat-item">
                 <i class="fas fa-newspaper"></i>
                 <span id="newsCount">0</span>
-                <small>Notícias</small>
+                <small>Notícias de Hoje</small>
             </div>
             <div class="stat-item">
                 <i class="fas fa-clock"></i>
@@ -39,22 +68,76 @@
             </div>
             <div class="stat-item">
                 <i class="fas fa-rss"></i>
-                <span>8</span>
-                <small>Fontes</small>
+                <span>12</span>
+                <small>Fontes Brasileiras</small>
             </div>
         </div>
 
         <!-- Loading -->
         <div id="loading" class="loading">
             <div class="spinner"></div>
-            <p>Carregando notícias...</p>
+            <p>Carregando notícias do dia...</p>
         </div>
 
-        <!-- News Grid -->
-        <div id="newsGrid" class="news-grid">
-            <!-- Notícias serão carregadas aqui via JavaScript -->
-        </div>
+        <!-- News Section -->
+        <section id="noticias">
+            <div id="newsGrid" class="news-grid">
+                <!-- Notícias serão carregadas aqui via JavaScript -->
+            </div>
+        </section>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <h3>🚀 LazzNews</h3>
+                    <p>Agregador de notícias de tecnologia brasileira, desenvolvido para manter você atualizado com as últimas tendências tech do Brasil.</p>
+                </div>
+                <div class="footer-links-section">
+                    <h4>Links Úteis</h4>
+                    <div class="footer-links">
+                        <a href="https://pedrolazzaroni.com.br">🏠 Portfólio</a>
+                        <a href="https://pedrolazzaroni.com.br/about">👨‍💻 Sobre</a>
+                        <a href="https://pedrolazzaroni.com.br/projects">💼 Projetos</a>
+                        <a href="https://pedrolazzaroni.com.br/contact">📞 Contato</a>
+                    </div>
+                </div>
+                <div class="footer-tech">
+                    <h4>Tecnologias</h4>
+                    <div class="tech-stack">
+                        <span class="tech-item">Python</span>
+                        <span class="tech-item">Flask</span>
+                        <span class="tech-item">RSS</span>
+                        <span class="tech-item">JavaScript</span>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-social">
+                <a href="https://github.com/pedrolazzaroni" target="_blank" class="social-icon" title="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://linkedin.com/in/pedrolazzaroni" target="_blank" class="social-icon" title="LinkedIn">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+                <a href="https://instagram.com/pedrolazzaroni" target="_blank" class="social-icon" title="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="mailto:contato@pedrolazzaroni.com.br" class="social-icon" title="Email">
+                    <i class="fas fa-envelope"></i>
+                </a>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-text">
+                    Desenvolvido com ❤️ por <strong>Pedro Lazzaroni</strong>
+                </div>
+                <div class="footer-copyright">
+                    © 2024 Pedro Lazzaroni. Todos os direitos reservados.
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <!-- Modal para Resumo -->
     <div id="summaryModal" class="modal">

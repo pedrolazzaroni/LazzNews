@@ -1,19 +1,26 @@
 // Variáveis globais
 let newsData = [];
 let lastUpdate = 0;
+let sourcesData = [];
 
 // Elementos DOM
 const newsGrid = document.getElementById('newsGrid');
 const loading = document.getElementById('loading');
 const refreshBtn = document.getElementById('refreshBtn');
+const sourcesBtn = document.getElementById('sourcesBtn');
 const newsCount = document.getElementById('newsCount');
 const lastUpdateEl = document.getElementById('lastUpdate');
 const summaryModal = document.getElementById('summaryModal');
 const summaryContent = document.getElementById('summaryContent');
 const closeModal = document.querySelector('.close');
+const sourcesSection = document.getElementById('sourcesSection');
+const sourcesList = document.getElementById('sourcesList');
 
 // Event listeners
-document.addEventListener('DOMContentLoaded', loadNews);
+document.addEventListener('DOMContentLoaded', () => {
+    loadNews();
+    loadSources();
+});
 refreshBtn.addEventListener('click', refreshNews);
 closeModal.addEventListener('click', closeSummaryModal);
 window.addEventListener('click', (e) => {
@@ -21,6 +28,44 @@ window.addEventListener('click', (e) => {
         closeSummaryModal();
     }
 });
+
+// Função para alternar seção de fontes
+function toggleSources() {
+    const isVisible = sourcesSection.style.display !== 'none';
+    sourcesSection.style.display = isVisible ? 'none' : 'block';
+    sourcesBtn.innerHTML = isVisible ? 
+        '<i class="fas fa-rss"></i> Ver Fontes' : 
+        '<i class="fas fa-times"></i> Ocultar Fontes';
+    
+    if (!isVisible && sourcesData.length === 0) {
+        loadSources();
+    }
+}
+
+// Função para carregar fontes
+async function loadSources() {
+    try {
+        const response = await fetch('/api/sources');
+        const data = await response.json();
+        sourcesData = data.sources;
+        renderSources();
+    } catch (error) {
+        console.error('Erro ao carregar fontes:', error);
+    }
+}
+
+// Função para renderizar fontes
+function renderSources() {
+    sourcesList.innerHTML = sourcesData.map(source => `
+        <div class="source-card">
+            <div class="source-name">${source.name}</div>
+            <a href="${source.url}" target="_blank" class="source-url">
+                <i class="fas fa-external-link-alt"></i>
+                ${source.url.replace('https://', '').replace('www.', '')}
+            </a>
+        </div>
+    `).join('');
+}
 
 // Funções principais
 async function loadNews() {
@@ -44,10 +89,23 @@ async function refreshNews() {
     refreshBtn.disabled = true;
     refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Atualizando...';
     
-    await loadNews();
-    
-    refreshBtn.disabled = false;
-    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar Notícias';
+    try {
+        const response = await fetch('/api/refresh');
+        const data = await response.json();
+        newsData = data.news;
+        lastUpdate = data.last_update;
+        updateStats();
+        renderNews();
+        
+        // Mostrar notificação de sucesso
+        showNotification('Notícias atualizadas com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro ao atualizar notícias:', error);
+        showNotification('Erro ao atualizar notícias. Tente novamente.', 'error');
+    } finally {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar Notícias';
+    }
 }
 
 function renderNews() {
@@ -55,8 +113,8 @@ function renderNews() {
         newsGrid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
                 <i class="fas fa-newspaper" style="font-size: 4rem; color: #ff8c00; margin-bottom: 1rem;"></i>
-                <h3>Nenhuma notícia encontrada</h3>
-                <p style="color: #b0b0b0;">Tente atualizar as notícias.</p>
+                <h3>Nenhuma notícia de hoje encontrada</h3>
+                <p style="color: #b0b0b0;">Todas as notícias exibidas são apenas do dia atual. Tente atualizar ou volte amanhã!</p>
             </div>
         `;
         return;
@@ -66,15 +124,18 @@ function renderNews() {
         <article class="news-card" data-index="${index}">
             ${article.image ? `<img src="${article.image}" alt="Imagem da notícia" class="news-image" onerror="this.style.display='none'">` : ''}
             <div class="news-content">
-                <span class="tech-badge">TECH</span>
+                <span class="tech-badge">TECH BRASIL</span>
                 <h3 class="news-title">${escapeHtml(article.title)}</h3>
                 <p class="news-summary">${escapeHtml(truncateText(article.summary, 150))}</p>
+                <div class="news-meta">
+                    <small><i class="fas fa-calendar"></i> Hoje</small>
+                </div>
                 <div class="news-actions">
                     <a href="${article.link}" target="_blank" class="news-link">
                         <i class="fas fa-external-link-alt"></i>
                         Ler Notícia
                     </a>
-                    <button class="summary-btn" onclick="showSummary('${escapeHtml(article.summary)}')">
+                    <button class="summary-btn" onclick="showSummary('${escapeHtml(article.summary).replace(/'/g, "&#39;")}')">
                         <i class="fas fa-file-alt"></i>
                         Resumir
                     </button>
@@ -94,6 +155,43 @@ function renderNews() {
             card.style.transform = 'translateY(0)';
         }, index * 100);
     });
+}
+
+// Função para mostrar notificações
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+        ${message}
+    `;
+    
+    // Adicionar estilos inline
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)'};
+        color: ${type === 'success' ? '#00ff00' : '#ff6b6b'};
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        border: 1px solid ${type === 'success' ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)'};
+        backdrop-filter: blur(10px);
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
 }
 
 async function showSummary(text) {
