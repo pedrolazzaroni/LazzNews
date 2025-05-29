@@ -12,7 +12,9 @@
     <header class="fixed-header">
         <div class="header-container">
             <div class="header-logo">
-                <h1>LazzNews</h1>
+                <a href="#" style="text-decoration: none;">
+                    <h1>LazzNews</h1>
+                </a>
             </div>
             <div class="header-actions">
                 <button id="refreshBtn" class="header-btn">
@@ -29,10 +31,9 @@
         <!-- App Description -->
         <section class="app-description">
             <div class="description-content">
-                <h2>🇧🇷 Tecnologia Brasileira em Tempo Real</h2>
+                <h2>Tecnologia Brasileira em Tempo Real</h2>
                 <p>O LazzNews é seu agregador inteligente de notícias de tecnologia, focado exclusivamente em fontes brasileiras. 
-                Acompanhe as últimas tendências, lançamentos e inovações do cenário tech nacional, com notícias atualizadas 
-                diariamente dos principais portais especializados do Brasil.</p>
+                Acompanhe as últimas tendências do dia, lançamentos e inovações do cenário tech nacional, com notícias atualizadas dos principais portais especializados do Brasil.</p>
                 <div class="features">
                     <span class="feature-tag">📰 Notícias do Dia</span>
                     <span class="feature-tag">🤖 Resumos IA</span>
@@ -76,14 +77,9 @@
         <div id="loading" class="loading">
             <div class="spinner"></div>
             <p>Carregando notícias do dia...</p>
-        </div>        <!-- News Section with Pagination -->
+        </div>
+        <!-- News Section with Pagination -->
         <section id="noticias">
-            <div class="news-header">
-                <h3>📰 Notícias de Hoje</h3>
-                <div class="news-stats">
-                    <span id="newsCount">0</span> notícias encontradas
-                </div>
-            </div>
             <div id="newsGrid" class="news-grid">
                 <!-- Notícias serão carregadas aqui via JavaScript -->
             </div>

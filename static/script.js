@@ -12,7 +12,9 @@ const loading = document.getElementById('loading');
 const refreshBtn = document.getElementById('refreshBtn');
 const sourcesBtn = document.getElementById('sourcesBtn');
 const newsCount = document.getElementById('newsCount');
+const newsCountDisplay = document.getElementById('newsCountDisplay');
 const lastUpdateEl = document.getElementById('lastUpdate');
+const lastUpdateTime = document.getElementById('lastUpdateTime');
 const summaryModal = document.getElementById('summaryModal');
 const summaryContent = document.getElementById('summaryContent');
 const closeModal = document.querySelector('.close');
@@ -46,16 +48,28 @@ function updateCurrentYear() {
     }
 }
 
-// Função para alternar seção de fontes
+// Função para alternar seção de fontes com animação melhorada
 function toggleSources() {
     const isVisible = sourcesSection.style.display !== 'none';
-    sourcesSection.style.display = isVisible ? 'none' : 'block';
-    sourcesBtn.innerHTML = isVisible ? 
-        '<i class="fas fa-rss"></i> Ver Fontes' : 
-        '<i class="fas fa-times"></i> Ocultar Fontes';
     
-    if (!isVisible && sourcesData.length === 0) {
-        loadSources();
+    if (isVisible) {
+        // Esconder com animação
+        sourcesSection.style.animation = 'slideUp 0.3s ease';
+        setTimeout(() => {
+            sourcesSection.style.display = 'none';
+        }, 300);
+        sourcesBtn.innerHTML = '<i class="fas fa-rss"></i>';
+        sourcesBtn.style.background = 'linear-gradient(135deg, rgba(255, 140, 0, 0.15), rgba(255, 165, 0, 0.1))';
+    } else {
+        // Mostrar com animação
+        sourcesSection.style.display = 'block';
+        sourcesSection.style.animation = 'slideDown 0.3s ease';
+        sourcesBtn.innerHTML = '<i class="fas fa-times"></i>';
+        sourcesBtn.style.background = 'linear-gradient(135deg, rgba(255, 140, 0, 0.25), rgba(255, 165, 0, 0.2))';
+        
+        if (sourcesData.length === 0) {
+            loadSources();
+        }
     }
 }
 
@@ -92,7 +106,7 @@ async function loadNews() {
         const data = await response.json();
         newsData = data.news;
         lastUpdate = data.last_update;
-        updateStats();
+        updateStatsAnimated();
         renderNews();
     } catch (error) {
         console.error('Erro ao carregar notícias:', error);
@@ -104,7 +118,8 @@ async function loadNews() {
 
 async function refreshNews() {
     refreshBtn.disabled = true;
-    refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
+    refreshBtn.classList.add('loading');
+    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
     
     try {
         const response = await fetch('/api/refresh');
@@ -112,7 +127,7 @@ async function refreshNews() {
         newsData = data.news;
         lastUpdate = data.last_update;
         currentPage = 1; // Reset para primeira página
-        updateStats();
+        updateStatsAnimated();
         renderNews();
         
         // Mostrar notificação de sucesso
@@ -122,6 +137,7 @@ async function refreshNews() {
         showNotification('Erro ao atualizar notícias. Tente novamente.', 'error');
     } finally {
         refreshBtn.disabled = false;
+        refreshBtn.classList.remove('loading');
         refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
     }
 }
@@ -247,7 +263,89 @@ function closeSummaryModal() {
 }
 
 function updateStats() {
-    newsCount.textContent = newsData.length;
+    // Atualizar contadores
+    if (newsCount) newsCount.textContent = newsData.length;
+    if (newsCountDisplay) newsCountDisplay.textContent = newsData.length;
+    
+    // Atualizar status de última atualização
+    if (lastUpdate) {
+        const date = new Date(lastUpdate * 1000);
+        const timeString = date.toLocaleTimeString('pt-BR');
+        
+        if (lastUpdateEl) lastUpdateEl.textContent = timeString;
+        if (lastUpdateTime) lastUpdateTime.textContent = timeString;
+    }
+    
+    // Calcular paginação
+    totalPages = Math.ceil(newsData.length / itemsPerPage);
+    totalPagesEl.textContent = totalPages;
+    currentPageEl.textContent = currentPage;
+    
+    // Mostrar/ocultar paginação
+    if (totalPages > 1) {
+        pagination.style.display = 'flex';
+    } else {
+        pagination.style.display = 'none';
+    }
+    
+    updatePaginationButtons();
+}
+
+// Função para animar a atualização do contador
+function animateCounterUpdate(element, newValue) {
+    if (!element) return;
+    
+    const currentValue = parseInt(element.textContent) || 0;
+    const increment = newValue > currentValue ? 1 : -1;
+    const duration = 800; // ms
+    const steps = Math.abs(newValue - currentValue);
+    const stepDuration = duration / Math.max(steps, 1);
+    
+    let current = currentValue;
+    
+    const updateCounter = () => {
+        if (current !== newValue) {
+            current += increment;
+            element.textContent = current;
+            element.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+            }, 100);
+            setTimeout(updateCounter, stepDuration);
+        }
+    };
+    
+    if (currentValue !== newValue) {
+        updateCounter();
+    }
+}
+
+// Função melhorada para atualizar stats com animação
+function updateStatsAnimated() {
+    // Animar contadores
+    if (newsCount) animateCounterUpdate(newsCount, newsData.length);
+    if (newsCountDisplay) animateCounterUpdate(newsCountDisplay, newsData.length);
+    
+    // Atualizar status de última atualização com efeito
+    if (lastUpdate) {
+        const date = new Date(lastUpdate * 1000);
+        const timeString = date.toLocaleTimeString('pt-BR');
+        
+        if (lastUpdateEl) {
+            lastUpdateEl.style.opacity = '0.5';
+            setTimeout(() => {
+                lastUpdateEl.textContent = timeString;
+                lastUpdateEl.style.opacity = '1';
+            }, 200);
+        }
+        if (lastUpdateTime) {
+            lastUpdateTime.style.opacity = '0.5';
+            setTimeout(() => {
+                lastUpdateTime.textContent = timeString;
+                lastUpdateTime.style.opacity = '1';
+            }, 200);
+        }
+    }
     
     // Calcular paginação
     totalPages = Math.ceil(newsData.length / itemsPerPage);
