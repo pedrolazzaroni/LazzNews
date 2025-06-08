@@ -64,7 +64,6 @@ def api_sources():
     sources = [{"name": feed["name"], "url": feed["url"].replace("/feed/", "").replace("/rss/", "").replace("/rss", "")} for feed in feeds]
     return jsonify({'sources': sources})
 
-
 @app.route('/api/summarize')
 def api_summarize():
     """API para sumarizar texto"""
