@@ -71,8 +71,6 @@ def api_summarize():
     text = request.args.get('text', '')
     summary = summarize_text(text)
     return jsonify({'summary': summary})
-
-
 if __name__ == '__main__':
     # Carrega notícias na inicialização
     update_news()
